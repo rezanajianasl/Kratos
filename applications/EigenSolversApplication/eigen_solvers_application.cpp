@@ -29,6 +29,11 @@
 #include "custom_solvers/eigen_pardiso_ldlt_solver.h"
 #endif
 
+#ifdef INCLUDE_PASTIX
+  #include "custom_solvers/pastix_solver.h"
+  #include "custom_solvers/pastix_complex_solver.h"
+#endif
+
 namespace Kratos
 {
 
@@ -93,6 +98,19 @@ void KratosEigenSolversApplication::Register()
     KRATOS_REGISTER_COMPLEX_LINEAR_SOLVER("pardiso_llt_complex", ComplexPardisoLLTFactory);
 
 #endif // defined USE_EIGEN_MKL
+
+#ifdef INCLUDE_PASTIX
+    typedef TUblasSparseSpace<double> SparseSpaceType;
+    typedef TUblasDenseSpace<double> LocalSpaceType;
+    typedef TUblasSparseSpace<std::complex<double>> ComplexSparseSpaceType;
+    typedef TUblasDenseSpace<std::complex<double>> ComplexLocalSpaceType;
+    typedef PastixSolver<SparseSpaceType,  LocalSpaceType> PastixSolverType;
+    static auto PastixSolverFactory = StandardLinearSolverFactory<SparseSpaceType,LocalSpaceType,PastixSolverType>();
+    KRATOS_REGISTER_LINEAR_SOLVER("pastix", PastixSolverFactory);
+    typedef PastixComplexSolver<ComplexSparseSpaceType, ComplexLocalSpaceType> PastixComplexSolverType;
+    static auto PastixComplexSolverFactory = StandardLinearSolverFactory<ComplexSparseSpaceType, ComplexLocalSpaceType, PastixComplexSolverType>();
+    KRATOS_REGISTER_COMPLEX_LINEAR_SOLVER("pastix_complex", PastixComplexSolverFactory);
+#endif
 }
 
 } // namespace Kratos

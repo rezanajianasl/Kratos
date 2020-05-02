@@ -39,6 +39,12 @@
 #include "custom_solvers/feast_eigensystem_solver.h"
 #endif
 
+#ifdef INCLUDE_PASTIX
+  #include "custom_solvers/pastix_solver.h"
+  #include "custom_solvers/pastix_complex_solver.h"
+#endif
+
+
 #include "factories/standard_linear_solver_factory.h"
 #include "eigen_solvers_application.h"
 
@@ -225,6 +231,26 @@ void AddCustomSolversToPython(pybind11::module& m)
     py::class_<FEASTConditionNumberUtilityType,FEASTConditionNumberUtilityType::Pointer>(m,"FEASTConditionNumberUtility")
         .def("GetConditionNumber", &FEASTConditionNumberUtilityType::GetConditionNumber)
         ;
+
+#ifdef INCLUDE_PASTIX
+    typedef LinearSolver<SparseSpaceType, LocalSpaceType> LinearSolverType;
+    typedef PastixSolver<SparseSpaceType, LocalSpaceType> PastixSolverType;
+    py::class_<PastixSolverType, typename PastixSolverType::Pointer, LinearSolverType>
+    (m, "PastixSolver")
+        .def(py::init<int,bool>() )
+        .def(py::init<double,int,int,int,bool>())
+        .def(py::init<Parameters>());
+        ;
+
+    typedef TUblasSparseSpace<std::complex<double>> ComplexSparseSpaceType;
+    typedef TUblasDenseSpace<std::complex<double>> ComplexLocalSpaceType;
+    typedef LinearSolver<ComplexSparseSpaceType, ComplexLocalSpaceType> ComplexLinearSolverType;
+    typedef PastixComplexSolver<ComplexSparseSpaceType, ComplexLocalSpaceType> PastixComplexSolverType;
+    py::class_<PastixComplexSolverType, typename PastixComplexSolverType::Pointer, ComplexLinearSolverType>
+    (m,"PastixComplexSolver")
+        .def(py::init<Parameters&>())
+        ;
+#endif
 }
 
 } // namespace Python

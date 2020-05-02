@@ -65,6 +65,22 @@ if( USE_EIGEN_FEAST MATCHES ON )
     add_definitions(-DUSE_EIGEN_FEAST)
 endif()
 
+if(${INCLUDE_PASTIX} MATCHES ON)
+    add_definitions(-DINCLUDE_PASTIX)
+    include_directories( ${PASTIX_INSTALL_DIR} )
+    FIND_LIBRARY(PASTIX_LINK_LIB pastix  ${PASTIX_INSTALL_DIR})
+    FIND_LIBRARY(SCOTCH_ERR_LIB scotcherr ${SCOTCH_INSTALL_DIR})
+    FIND_LIBRARY(SCOTCH_LIB scotch  ${SCOTCH_INSTALL_DIR})
+    message("Pastix library found =" ${PASTIX_LINK_LIB})
+    add_definitions( -DFORCE_NOMPI )
+    add_library(kratos_pastix STATIC external_libraries/Pastix/solvePASTIX.c  )
+    target_link_libraries(kratos_pastix  ${PASTIX_LINK_LIB} ${SCOTCH_LIB} ${SCOTCH_ERR_LIB} rt  ${BLAS_LIBRARIES} )
+
+    install(FILES ${SCOTCH_LIB} ${SCOTCH_ERR_LIB} ${BLAS_LIBRARIES} DESTINATION libs )
+else(${INCLUDE_PASTIX} MATCHES ON)
+    set(PASTIX_LINK_LIB "")
+endif(${INCLUDE_PASTIX} MATCHES ON)
+
 ## generate variables with the sources
 set( KRATOS_EIGENSOLVERS_APPLICATION_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/eigen_solvers_application.cpp
@@ -100,6 +116,9 @@ if( USE_EIGEN_MKL MATCHES ON )
         target_link_libraries( KratosEigenSolversCore PUBLIC mkl_rt )
         if( USE_EIGEN_FEAST MATCHES ON )
             target_link_libraries(KratosEigenSolversCore PUBLIC feast4 gfortran m)
+        endif()
+        if( ${INCLUDE_PASTIX} MATCHES ON )
+            target_link_libraries(KratosEigenSolversCore PUBLIC kratos_pastix rt)
         endif()
     endif( ${CMAKE_SYSTEM_NAME} MATCHES "Windows" )
 endif()
