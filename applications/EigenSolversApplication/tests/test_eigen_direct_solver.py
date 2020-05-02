@@ -105,8 +105,8 @@ class TestEigenDirectSolver(KratosUnittest.TestCase):
     def test_eigen_pardiso_llt(self):
         self._execute_eigen_direct_solver_test('PardisoLLTSolver', 'pardiso_llt')
 
-    def test_eigen_pastix(self):
-        self._execute_eigen_direct_solver_test('PastixSolver', 'pastix')
+    #def test_eigen_pastix(self):
+        #self._execute_eigen_direct_solver_test('PastixSolver', 'pastix')
 
     def test_eigen_complex_sparse_lu(self):
         self._execute_eigen_direct_complex_solver_test('ComplexSparseLUSolver', 'sparse_lu_complex')
@@ -120,8 +120,8 @@ class TestEigenDirectSolver(KratosUnittest.TestCase):
     def test_eigen_complex_pardiso_llt(self):
         self._execute_eigen_direct_complex_solver_test('ComplexPardisoLLTSolver', 'pardiso_llt_complex')
 
-    def test_eigen_complex_pastix(self):
-        self._execute_eigen_direct_complex_solver_test('PastixComplexSolver', 'pastix_complex')
+    #def test_eigen_complex_pastix(self):
+        #self._execute_eigen_direct_complex_solver_test('PastixComplexSolver', 'pastix_complex')
 
 if __name__ == '__main__':
     KratosUnittest.main()
