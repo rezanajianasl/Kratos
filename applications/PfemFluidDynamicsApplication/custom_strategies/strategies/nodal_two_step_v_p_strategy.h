@@ -268,7 +268,7 @@ public:
 		bool fixedTimeStep = false;
 		/* boost::timer solve_step_time; */
 
-		this->UnactiveSliverElements();
+		// this->UnactiveSliverElements(); //this is done in set_active_flag_mesher_process which is activated from fluid_pre_refining_mesher.py
 
 		this->InitializeSolutionStep();
 		for (unsigned int it = 0; it < maxNonLinearIterations; ++it)
@@ -484,50 +484,119 @@ public:
 		// }
 	}
 
-	void UnactiveSliverElements()
-	{
-		KRATOS_TRY;
+    void UnactiveSliverElements()
+    {
+      KRATOS_TRY;
 
-		ModelPart &rModelPart = BaseType::GetModelPart();
-		const unsigned int dimension = rModelPart.ElementsBegin()->GetGeometry().WorkingSpaceDimension();
-		MesherUtilities MesherUtils;
-		double ModelPartVolume = MesherUtils.ComputeModelPartVolume(rModelPart);
-		double CriticalVolume = 0.001 * ModelPartVolume / double(rModelPart.Elements().size());
-		double ElementalVolume = 0;
+      ModelPart &rModelPart = BaseType::GetModelPart();
+      const unsigned int dimension = rModelPart.ElementsBegin()->GetGeometry().WorkingSpaceDimension();
+      MesherUtilities MesherUtils;
+      double ModelPartVolume = MesherUtils.ComputeModelPartVolume(rModelPart);
+      double CriticalVolume = 0.005 * ModelPartVolume / double(rModelPart.Elements().size());
+      double ElementalVolume = 0;
+      unsigned int sliversFromVolume = 0;
+      unsigned int sliversFromShape = 0;
 
 #pragma omp parallel
-		{
-			ModelPart::ElementIterator ElemBegin;
-			ModelPart::ElementIterator ElemEnd;
-			OpenMPUtils::PartitionedIterators(rModelPart.Elements(), ElemBegin, ElemEnd);
-			for (ModelPart::ElementIterator itElem = ElemBegin; itElem != ElemEnd; ++itElem)
-			{
-				unsigned int numNodes = itElem->GetGeometry().size();
-				if (numNodes == (dimension + 1))
-				{
-					if (dimension == 2)
-					{
-						ElementalVolume = (itElem)->GetGeometry().Area();
-					}
-					else if (dimension == 3)
-					{
-						ElementalVolume = (itElem)->GetGeometry().Volume();
-					}
+      {
+        ModelPart::ElementIterator ElemBegin;
+        ModelPart::ElementIterator ElemEnd;
+        OpenMPUtils::PartitionedIterators(rModelPart.Elements(), ElemBegin, ElemEnd);
+        for (ModelPart::ElementIterator itElem = ElemBegin; itElem != ElemEnd; ++itElem)
+        {
+          unsigned int freeSurfaceNodes = 0;
+          unsigned int numNodes = itElem->GetGeometry().size();
+          if (numNodes == (dimension + 1))
+          {
+            if (dimension == 2)
+            {
+              ElementalVolume = (itElem)->GetGeometry().Area();
+            }
+            else if (dimension == 3)
+            {
+              ElementalVolume = (itElem)->GetGeometry().Volume();
 
-					if (ElementalVolume < CriticalVolume)
-					{
-						// std::cout << "sliver element: it has Volume: " << ElementalVolume << " vs CriticalVolume(meanVol/1000): " << CriticalVolume<< std::endl;
-						(itElem)->Set(ACTIVE, false);
-					}
-					else
-					{
-						(itElem)->Set(ACTIVE, true);
-					}
-				}
-			}
-		}
-		KRATOS_CATCH("");
-	}
+              for (unsigned int i = 0; i < numNodes; i++)
+              {
+                if (itElem->GetGeometry()[i].Is(FREE_SURFACE))
+                {
+                  freeSurfaceNodes++;
+                }
+              }
+            }
+
+            if (fabs(ElementalVolume) <= CriticalVolume && freeSurfaceNodes < 3)
+            {
+              sliversFromVolume++;
+              (itElem)->Set(ACTIVE, false);
+            }
+            else if (fabs(ElementalVolume) > CriticalVolume)
+            {
+              (itElem)->Set(ACTIVE, true);
+            }
+
+            array_1d<double, 3> nodeA = itElem->GetGeometry()[0].Coordinates();
+            array_1d<double, 3> nodeB = itElem->GetGeometry()[1].Coordinates();
+            array_1d<double, 3> nodeC = itElem->GetGeometry()[2].Coordinates();
+            array_1d<double, 3> nodeD = itElem->GetGeometry()[3].Coordinates();
+
+            double a1 = 0; //slope x for plane on the first triangular face of the tetrahedra (nodes A,B,C)
+            double b1 = 0; //slope y for plane on the first triangular face of the tetrahedra (nodes A,B,C)
+            double c1 = 0; //slope z for plane on the first triangular face of the tetrahedra (nodes A,B,C)
+            a1 = (nodeB[1] - nodeA[1]) * (nodeC[2] - nodeA[2]) - (nodeC[1] - nodeA[1]) * (nodeB[2] - nodeA[2]);
+            b1 = (nodeB[2] - nodeA[2]) * (nodeC[0] - nodeA[0]) - (nodeC[2] - nodeA[2]) * (nodeB[0] - nodeA[0]);
+            c1 = (nodeB[0] - nodeA[0]) * (nodeC[1] - nodeA[1]) - (nodeC[0] - nodeA[0]) * (nodeB[1] - nodeA[1]);
+            double a2 = 0; //slope x for plane on the second triangular face of the tetrahedra (nodes A,B,D)
+            double b2 = 0; //slope y for plane on the second triangular face of the tetrahedra (nodes A,B,D)
+            double c2 = 0; //slope z for plane on the second triangular face of the tetrahedra (nodes A,B,D)
+            a2 = (nodeB[1] - nodeA[1]) * (nodeD[2] - nodeA[2]) - (nodeD[1] - nodeA[1]) * (nodeB[2] - nodeA[2]);
+            b2 = (nodeB[2] - nodeA[2]) * (nodeD[0] - nodeA[0]) - (nodeD[2] - nodeA[2]) * (nodeB[0] - nodeA[0]);
+            c2 = (nodeB[0] - nodeA[0]) * (nodeD[1] - nodeA[1]) - (nodeD[0] - nodeA[0]) * (nodeB[1] - nodeA[1]);
+            double a3 = 0; //slope x for plane on the third triangular face of the tetrahedra (nodes B,C,D)
+            double b3 = 0; //slope y for plane on the third triangular face of the tetrahedra (nodes B,C,D)
+            double c3 = 0; //slope z for plane on the third triangular face of the tetrahedra (nodes B,C,D)
+            a3 = (nodeB[1] - nodeC[1]) * (nodeD[2] - nodeC[2]) - (nodeD[1] - nodeC[1]) * (nodeB[2] - nodeC[2]);
+            b3 = (nodeB[2] - nodeC[2]) * (nodeD[0] - nodeC[0]) - (nodeD[2] - nodeC[2]) * (nodeB[0] - nodeC[0]);
+            c3 = (nodeB[0] - nodeC[0]) * (nodeD[1] - nodeC[1]) - (nodeD[0] - nodeC[0]) * (nodeB[1] - nodeC[1]);
+            double a4 = 0; //slope x for plane on the fourth triangular face of the tetrahedra (nodes B,C,D)
+            double b4 = 0; //slope y for plane on the fourth triangular face of the tetrahedra (nodes B,C,D)
+            double c4 = 0; //slope z for plane on the fourth triangular face of the tetrahedra (nodes B,C,D)
+            a4 = (nodeA[1] - nodeC[1]) * (nodeD[2] - nodeC[2]) - (nodeD[1] - nodeC[1]) * (nodeA[2] - nodeC[2]);
+            b4 = (nodeA[2] - nodeC[2]) * (nodeD[0] - nodeC[0]) - (nodeD[2] - nodeC[2]) * (nodeA[0] - nodeC[0]);
+            c4 = (nodeA[0] - nodeC[0]) * (nodeD[1] - nodeC[1]) - (nodeD[0] - nodeC[0]) * (nodeA[1] - nodeC[1]);
+
+            double cosAngle12 = (a1 * a2 + b1 * b2 + c1 * c2) / (sqrt(pow(a1, 2) + pow(b1, 2) + pow(c1, 2)) * sqrt(pow(a2, 2) + pow(b2, 2) + pow(c2, 2)));
+            double cosAngle13 = (a1 * a3 + b1 * b3 + c1 * c3) / (sqrt(pow(a1, 2) + pow(b1, 2) + pow(c1, 2)) * sqrt(pow(a3, 2) + pow(b3, 2) + pow(c3, 2)));
+            double cosAngle14 = (a1 * a4 + b1 * b4 + c1 * c4) / (sqrt(pow(a1, 2) + pow(b1, 2) + pow(c1, 2)) * sqrt(pow(a4, 2) + pow(b4, 2) + pow(c4, 2)));
+            double cosAngle23 = (a3 * a2 + b3 * b2 + c3 * c2) / (sqrt(pow(a3, 2) + pow(b3, 2) + pow(c3, 2)) * sqrt(pow(a2, 2) + pow(b2, 2) + pow(c2, 2)));
+            double cosAngle24 = (a4 * a2 + b4 * b2 + c4 * c2) / (sqrt(pow(a4, 2) + pow(b4, 2) + pow(c4, 2)) * sqrt(pow(a2, 2) + pow(b2, 2) + pow(c2, 2)));
+            double cosAngle34 = (a4 * a3 + b4 * b3 + c4 * c3) / (sqrt(pow(a4, 2) + pow(b4, 2) + pow(c4, 2)) * sqrt(pow(a3, 2) + pow(b3, 2) + pow(c3, 2)));
+
+            if (fabs(cosAngle12) > 0.999 || fabs(cosAngle13) > 0.999 || fabs(cosAngle14) > 0.999 || fabs(cosAngle23) > 0.999 || fabs(cosAngle24) > 0.999 || fabs(cosAngle34) > 0.999) // if two faces are coplanar, I will erase the element (which is probably a sliver)
+            {
+              if (freeSurfaceNodes < 3)
+              {
+                (itElem)->Set(ACTIVE, false);
+                sliversFromShape++;
+              }
+            }
+
+            if (ElementalVolume < 0)
+            {
+              (itElem)->Set(ACTIVE, false);
+              std::cout << " !!! PLAY ATTENTION WITH THIS ELEMENT: it has negative volume=" << ElementalVolume << " and CriticalVolume" << CriticalVolume << std::endl;
+            }
+          }
+        }
+      }
+
+      if (sliversFromVolume > 0 || sliversFromShape > 0)
+      {
+        std::cout << "in the strategy, sliversFromVolume " << sliversFromVolume<< " and sliversFromShape " << sliversFromShape << std::endl;
+      }
+
+      KRATOS_CATCH("");
+    }
 
 	void AssignFluidMaterialToEachNode(ModelPart::NodeIterator itNode)
 	{

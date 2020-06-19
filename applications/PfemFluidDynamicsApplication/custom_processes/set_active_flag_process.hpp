@@ -108,6 +108,8 @@ public:
       KRATOS_TRY
 #pragma omp parallel
       {
+
+        std::cout<<"           SET ACTIVE FLAG PROCESS "<<std::endl;
           ModelPart::ElementIterator ElemBegin;
   ModelPart::ElementIterator ElemEnd;
   OpenMPUtils::PartitionedIterators(mrModelPart.Elements(), ElemBegin, ElemEnd);
