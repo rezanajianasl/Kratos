@@ -369,7 +369,7 @@ namespace Kratos
                         {
                             Alpha *= 1.125;
                         }
-                        else if (numfreesurf < 4 && numisolated < 4 && previouslyIsolatedNodes < 4 && previouslyFreeSurfaceNodes < 4 && sumIsolatedFreeSurf < 4)
+                        else if (numfreesurf < 4 && numisolated < 4 && previouslyIsolatedNodes == 0 && previouslyFreeSurfaceNodes < 4 && sumIsolatedFreeSurf < 4)
                         {
                             Alpha *= 1.05;
                         }
