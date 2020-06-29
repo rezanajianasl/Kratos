@@ -4,7 +4,7 @@
 //   _|\_\_|  \__,_|\__|\___/ ____/
 //                   Multi-Physics
 //
-//  License:         BSD License 
+//  License:         BSD License
 //                   Kratos default license: kratos/license.txt
 //
 
@@ -20,6 +20,7 @@ namespace Kratos
 
     void IgaModeler::SetupModelPart()
     {
+        KRATOS_WATCH("test")
         KRATOS_ERROR_IF_NOT(mParameters.Has("cad_model_part_name"))
             << "Missing \"cad_model_part\" section" << std::endl;
         ModelPart& cad_model_part = mpModel->GetModelPart(mParameters["cad_model_part_name"].GetString());
