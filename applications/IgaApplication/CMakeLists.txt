@@ -28,6 +28,7 @@ set(KRATOS_IGA_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/penalty_coupling_condition.cpp
     # modelers
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_modelers/iga_modeler.cpp;
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_modelers/nurbs_tessellation_modeler.cpp;
 )
 
 ## generate variables with the testing sources
