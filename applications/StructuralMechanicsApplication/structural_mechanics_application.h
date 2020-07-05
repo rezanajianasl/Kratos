@@ -62,6 +62,7 @@
 
 /* Adding solid elements */
 #include "custom_elements/small_displacement.h"
+#include "custom_elements/damage_small_displacement.h"
 #include "custom_elements/axisym_small_displacement.h"
 #include "custom_elements/z_strain_driven_2p5_small_displacement.h"
 #include "custom_elements/total_lagrangian.h"
@@ -377,6 +378,19 @@ private:
     const SmallDisplacement mSmallDisplacement3D15N;
     const SmallDisplacement mSmallDisplacement3D20N;
     const SmallDisplacement mSmallDisplacement3D27N;
+
+    const DamageSmallDisplacement mDamageSmallDisplacement2D3N;
+    const DamageSmallDisplacement mDamageSmallDisplacement2D4N;
+    const DamageSmallDisplacement mDamageSmallDisplacement2D6N;
+    const DamageSmallDisplacement mDamageSmallDisplacement2D8N;
+    const DamageSmallDisplacement mDamageSmallDisplacement2D9N;
+    const DamageSmallDisplacement mDamageSmallDisplacement3D4N;
+    const DamageSmallDisplacement mDamageSmallDisplacement3D6N;
+    const DamageSmallDisplacement mDamageSmallDisplacement3D8N;
+    const DamageSmallDisplacement mDamageSmallDisplacement3D10N;
+    const DamageSmallDisplacement mDamageSmallDisplacement3D15N;
+    const DamageSmallDisplacement mDamageSmallDisplacement3D20N;
+    const DamageSmallDisplacement mDamageSmallDisplacement3D27N;    
 
     const SmallDisplacementBbar mSmallDisplacementBbar2D4N;
     const SmallDisplacementBbar mSmallDisplacementBbar3D8N;
