@@ -26,7 +26,7 @@
 namespace Kratos
 {
 DamageSmallDisplacement::DamageSmallDisplacement( IndexType NewId, GeometryType::Pointer pGeometry )
-    : BaseSolidElement( NewId, pGeometry )
+    : BaseDamageSolidElement( NewId, pGeometry )
 {
     //DO NOT ADD DOFS HERE!!!
 }
@@ -35,7 +35,7 @@ DamageSmallDisplacement::DamageSmallDisplacement( IndexType NewId, GeometryType:
 /***********************************************************************************/
 
 DamageSmallDisplacement::DamageSmallDisplacement( IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties )
-        : BaseSolidElement( NewId, pGeometry, pProperties )
+        : BaseDamageSolidElement( NewId, pGeometry, pProperties )
 {
     //DO NOT ADD DOFS HERE!!!
 }
@@ -301,7 +301,7 @@ void DamageSmallDisplacement::ComputeEquivalentF(
 
 void DamageSmallDisplacement::save( Serializer& rSerializer ) const
 {
-    KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, BaseSolidElement );
+    KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, BaseDamageSolidElement );
 }
 
 /***********************************************************************************/
@@ -309,7 +309,7 @@ void DamageSmallDisplacement::save( Serializer& rSerializer ) const
 
 void DamageSmallDisplacement::load( Serializer& rSerializer )
 {
-    KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, BaseSolidElement );
+    KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, BaseDamageSolidElement );
 }
 
 } // Namespace Kratosf

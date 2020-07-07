@@ -21,7 +21,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_elements/base_solid_element.h"
+#include "custom_elements/base_damage_solid_element.h"
 #include "includes/variables.h"
 
 namespace Kratos
@@ -53,7 +53,7 @@ namespace Kratos
  */
 
 class KRATOS_API(STRUCTURAL_MECHANICS_APPLICATION) DamageSmallDisplacement
-    : public BaseSolidElement
+    : public BaseDamageSolidElement
 {
 public:
     ///@name Type Definitions
@@ -66,7 +66,7 @@ public:
     typedef GeometryData::IntegrationMethod IntegrationMethod;
 
     /// The base element type
-    typedef BaseSolidElement BaseType;
+    typedef BaseDamageSolidElement BaseType;
 
     /// The definition of the index type
     typedef std::size_t IndexType;
@@ -185,7 +185,7 @@ protected:
     ///@name Protected Operators
     ///@{
 
-    DamageSmallDisplacement() : BaseSolidElement()
+    DamageSmallDisplacement() : BaseDamageSolidElement()
     {
     }
 
