@@ -109,6 +109,7 @@ class MechanicalSolver(PythonSolver):
             "volumetric_strain_dofs": false,
             "rotation_dofs": false,
             "pressure_dofs": false,
+            "damage_dofs": false,
             "displacement_control": false,
             "reform_dofs_at_each_step": false,
             "line_search": false,
@@ -155,6 +156,10 @@ class MechanicalSolver(PythonSolver):
             self.main_model_part.AddNodalSolutionStepVariable(KratosMultiphysics.ROTATION)
             self.main_model_part.AddNodalSolutionStepVariable(KratosMultiphysics.REACTION_MOMENT)
             self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.POINT_MOMENT)
+        if self.settings["damage_dofs"].GetBool():
+            # Add specific variables for the problem (damage dofs).
+            self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.DAMAGE)
+            self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.DAMAGE_REACTION)         s 
         if self.settings["volumetric_strain_dofs"].GetBool():
             # Add specific variables for the problem (rotation dofs).
             self.main_model_part.AddNodalSolutionStepVariable(KratosMultiphysics.VOLUMETRIC_STRAIN)
@@ -181,6 +186,8 @@ class MechanicalSolver(PythonSolver):
             KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.ROTATION_Z, KratosMultiphysics.REACTION_MOMENT_Z,self.main_model_part)
         if self.settings["volumetric_strain_dofs"].GetBool():
             KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.VOLUMETRIC_STRAIN, StructuralMechanicsApplication.REACTION_STRAIN,self.main_model_part)
+        if self.settings["damage_dofs"].GetBool():
+            KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.DAMAGE, StructuralMechanicsApplication.DAMAGE_REACTION,self.main_model_part)            
         if self.settings["displacement_control"].GetBool():
             KratosMultiphysics.VariableUtils().AddDof(StructuralMechanicsApplication.LOAD_FACTOR, StructuralMechanicsApplication.PRESCRIBED_DISPLACEMENT,self.main_model_part)
 
@@ -415,6 +422,7 @@ class MechanicalSolver(PythonSolver):
         conv_params.AddValue("convergence_criterion",self.settings["convergence_criterion"])
         conv_params.AddValue("volumetric_strain_dofs",self.settings["volumetric_strain_dofs"])
         conv_params.AddValue("rotation_dofs",self.settings["rotation_dofs"])
+        conv_params.AddValue("damage_dofs",self.settings["damage_dofs"])
         conv_params.AddValue("echo_level",self.settings["echo_level"])
         conv_params.AddValue("displacement_relative_tolerance",self.settings["displacement_relative_tolerance"])
         conv_params.AddValue("displacement_absolute_tolerance",self.settings["displacement_absolute_tolerance"])

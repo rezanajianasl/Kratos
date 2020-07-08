@@ -544,7 +544,7 @@ void KratosStructuralMechanicsApplication::Register() {
     KRATOS_REGISTER_SYMMETRIC_3D_TENSOR_VARIABLE_WITH_COMPONENTS(ORTHOTROPIC_ELASTIC_CONSTANTS);
 
     // Damage Field variable
-    KRATOS_REGISTER_VARIABLE(DAMAGE_FIELD);    
+    KRATOS_REGISTER_VARIABLE(DAMAGE_REACTION);    
 
     //Register the truss element
     KRATOS_REGISTER_ELEMENT("TrussElement3D2N", mTrussElement3D2N)
