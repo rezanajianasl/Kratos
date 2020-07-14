@@ -310,8 +310,8 @@ void BaseDamageSolidElement::EquationIdVector(
     const SizeType number_of_nodes = GetGeometry().size();
     const SizeType dimension = GetGeometry().WorkingSpaceDimension();
 
-    if (rResult.size() != dimension * number_of_nodes)
-        rResult.resize(dimension * number_of_nodes,false);
+    if (rResult.size() != dimension * number_of_nodes + number_of_nodes)
+        rResult.resize(dimension * number_of_nodes + number_of_nodes,false);
 
     const SizeType pos = this->GetGeometry()[0].GetDofPosition(DISPLACEMENT_X);
 
@@ -320,6 +320,7 @@ void BaseDamageSolidElement::EquationIdVector(
             const SizeType index = i * 2;
             rResult[index] = GetGeometry()[i].GetDof(DISPLACEMENT_X,pos).EquationId();
             rResult[index + 1] = GetGeometry()[i].GetDof(DISPLACEMENT_Y,pos+1).EquationId();
+            rResult[index + 2] = GetGeometry()[i].GetDof(DAMAGE,pos+2).EquationId();
         }
     } else {
         for (IndexType i = 0; i < number_of_nodes; ++i) {
@@ -327,6 +328,7 @@ void BaseDamageSolidElement::EquationIdVector(
             rResult[index] = GetGeometry()[i].GetDof(DISPLACEMENT_X,pos).EquationId();
             rResult[index + 1] = GetGeometry()[i].GetDof(DISPLACEMENT_Y,pos+1).EquationId();
             rResult[index + 2] = GetGeometry()[i].GetDof(DISPLACEMENT_Z,pos+2).EquationId();
+            rResult[index + 3] = GetGeometry()[i].GetDof(DAMAGE,pos+3).EquationId();
         }
     }
 
@@ -346,18 +348,20 @@ void BaseDamageSolidElement::GetDofList(
     const SizeType number_of_nodes = GetGeometry().size();
     const SizeType dimension = GetGeometry().WorkingSpaceDimension();
     rElementalDofList.resize(0);
-    rElementalDofList.reserve(dimension*number_of_nodes);
+    rElementalDofList.reserve(dimension*number_of_nodes + number_of_nodes);
 
     if(dimension == 2) {
         for (IndexType i = 0; i < number_of_nodes; ++i) {
             rElementalDofList.push_back(GetGeometry()[i].pGetDof(DISPLACEMENT_X));
             rElementalDofList.push_back( GetGeometry()[i].pGetDof(DISPLACEMENT_Y));
+            rElementalDofList.push_back( GetGeometry()[i].pGetDof(DAMAGE));
         }
     } else {
         for (IndexType i = 0; i < number_of_nodes; ++i) {
             rElementalDofList.push_back(GetGeometry()[i].pGetDof(DISPLACEMENT_X));
             rElementalDofList.push_back( GetGeometry()[i].pGetDof(DISPLACEMENT_Y));
             rElementalDofList.push_back( GetGeometry()[i].pGetDof(DISPLACEMENT_Z));
+            rElementalDofList.push_back( GetGeometry()[i].pGetDof(DAMAGE));
         }
     }
 
@@ -368,6 +372,34 @@ void BaseDamageSolidElement::GetDofList(
 /***********************************************************************************/
 
 void BaseDamageSolidElement::GetValuesVector(
+    Vector& rValues,
+    int Step
+    ) const
+{
+    const SizeType number_of_nodes = GetGeometry().size();
+    const SizeType dimension = GetGeometry().WorkingSpaceDimension();
+    const SizeType mat_size = number_of_nodes * dimension + number_of_nodes;
+    if (rValues.size() != mat_size)
+        rValues.resize(mat_size, false);
+    for (IndexType i = 0; i < number_of_nodes; ++i)
+    {
+        const array_1d<double, 3 >& displacement = GetGeometry()[i].FastGetSolutionStepValue(DISPLACEMENT, Step);
+        const SizeType index = i * (dimension + 1);
+        for(unsigned int k = 0; k < dimension; ++k)
+        {
+            rValues[index + k] = displacement[k];
+        }
+
+        const double& damagnode = GetGeometry()[i].FastGetSolutionStepValue(DAMAGE, Step);
+        rValues[index + dimension] = damagnode;
+
+    }
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+void BaseDamageSolidElement::GetDisplacementValuesVector(
     Vector& rValues,
     int Step
     ) const
@@ -385,6 +417,27 @@ void BaseDamageSolidElement::GetValuesVector(
         {
             rValues[index + k] = displacement[k];
         }
+    }
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+void BaseDamageSolidElement::GetDamageValuesVector(
+    Vector& rValues,
+    int Step
+    ) const
+{
+    const SizeType number_of_nodes = GetGeometry().size();
+    const SizeType dimension = GetGeometry().WorkingSpaceDimension();
+    const SizeType mat_size = number_of_nodes;
+    if (rValues.size() != mat_size)
+        rValues.resize(mat_size, false);
+    for (IndexType i = 0; i < number_of_nodes; ++i)
+    {   
+        const SizeType index = i;
+        const double& damagnode = GetGeometry()[i].FastGetSolutionStepValue(DAMAGE, Step);
+        rValues[index] = damagnode;
     }
 }
 
@@ -1594,7 +1647,23 @@ void BaseDamageSolidElement::CalculateAndAddKm(
 {
     KRATOS_TRY
 
-    noalias( rLeftHandSideMatrix ) += IntegrationWeight * prod( trans( B ), Matrix(prod(D, B)));
+    const SizeType dimension = GetGeometry().WorkingSpaceDimension();
+    const SizeType number_of_nodes = GetGeometry().PointsNumber();
+    const SizeType mat_size = number_of_nodes * (dimension + 1); //damage dimension is included
+
+    Matrix Kt = ZeroMatrix( mat_size, mat_size );
+    Matrix Kuu = IntegrationWeight * prod( trans( B ), Matrix(prod(D, B))); //displ res contri.
+    Matrix Kdd = ZeroMatrix( number_of_nodes, number_of_nodes ); //damage res contri.
+
+    for ( IndexType i = 0; i < number_of_nodes; ++i )
+        for ( IndexType j = 0; j < number_of_nodes; ++j ){
+            for ( IndexType k = 0; k < dimension; ++k )
+                Kt(i*(dimension+1)+k,j*(dimension+1)+k) = Kuu(i*(dimension)+k,j*(dimension)+k);
+
+            Kt(i*(dimension+1)+dimension,j*(dimension+1)+dimension) = Kdd(i,j);
+        }
+
+    noalias( rLeftHandSideMatrix ) += Kt;
 
     KRATOS_CATCH( "" )
 }
@@ -1633,11 +1702,26 @@ void BaseDamageSolidElement::CalculateAndAddResidualVector(
 {
     KRATOS_TRY
 
+    const SizeType number_of_nodes = GetGeometry().PointsNumber();
+    const SizeType dimension = GetGeometry().WorkingSpaceDimension();
+    const SizeType mat_size = number_of_nodes * (dimension + 1); //damage dimension is included
+
     // Operation performed: rRightHandSideVector += ExtForce * IntegrationWeight
     this->CalculateAndAddExtForceContribution( rThisKinematicVariables.N, rCurrentProcessInfo, rBodyForce, rRightHandSideVector, IntegrationWeight );
 
-    // Operation performed: rRightHandSideVector -= IntForce * IntegrationWeight
-    noalias( rRightHandSideVector ) -= IntegrationWeight * prod( trans( rThisKinematicVariables.B ), rStressVector );
+    // Operation performed: = IntForce * IntegrationWeight
+    Vector rHu = IntegrationWeight * prod( trans( rThisKinematicVariables.B ), rStressVector ); //displacement res contr.
+    Vector rHd = ZeroVector( number_of_nodes ); //damage res contr.
+    Vector rHt = ZeroVector( mat_size ); // total RHS composed of rHu and rHt
+
+    for ( IndexType i = 0; i < number_of_nodes; ++i ){
+        for ( IndexType j = 0; j < dimension; ++j )
+             rHt[i*(dimension+1)+j] = rHu[i*(dimension)+j];
+
+        rHt[i*(dimension+1)+dimension] = rHd[i];
+    }
+    
+    noalias( rRightHandSideVector ) -= rHt;
 
     KRATOS_CATCH( "" )
 }
@@ -1659,7 +1743,7 @@ void BaseDamageSolidElement::CalculateAndAddExtForceContribution(
     const SizeType dimension = GetGeometry().WorkingSpaceDimension();
 
     for ( IndexType i = 0; i < number_of_nodes; ++i ) {
-        const SizeType index = dimension * i;
+        const SizeType index = (dimension + 1) * i;
 
         for ( IndexType j = 0; j < dimension; ++j )
             rRightHandSideVector[index + j] += Weight * rN[i] * rBodyForce[j];

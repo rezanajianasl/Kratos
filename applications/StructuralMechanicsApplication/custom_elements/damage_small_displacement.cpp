@@ -118,13 +118,13 @@ void DamageSmallDisplacement::CalculateAll(
     ConstitutiveVariables this_constitutive_variables(strain_size);
 
     // Resizing as needed the LHS
-    const SizeType mat_size = number_of_nodes * dimension;
+    const SizeType mat_size = number_of_nodes * (dimension + 1); //damage dimension is included
 
     if ( CalculateStiffnessMatrixFlag ) { // Calculation of the matrix is required
         if ( rLeftHandSideMatrix.size1() != mat_size )
             rLeftHandSideMatrix.resize( mat_size, mat_size, false );
 
-        noalias( rLeftHandSideMatrix ) = ZeroMatrix( mat_size, mat_size ); //resetting LHS
+        noalias( rLeftHandSideMatrix ) = ZeroMatrix( mat_size, mat_size ); // resetting LHS
     }
 
     // Resizing as needed the RHS
@@ -210,7 +210,7 @@ void DamageSmallDisplacement::CalculateKinematicVariables(
     CalculateB( rThisKinematicVariables.B, rThisKinematicVariables.DN_DX, r_integration_points, PointNumber );
 
     // Compute equivalent F
-    GetValuesVector(rThisKinematicVariables.Displacements);
+    GetDisplacementValuesVector(rThisKinematicVariables.Displacements);
     Vector strain_vector = prod(rThisKinematicVariables.B, rThisKinematicVariables.Displacements);
     ComputeEquivalentF(rThisKinematicVariables.F, strain_vector);
     rThisKinematicVariables.detF = MathUtils<double>::Det(rThisKinematicVariables.F);
@@ -234,7 +234,7 @@ void DamageSmallDisplacement::SetConstitutiveVariables(
 
     // Displacements vector
     Vector displacements(mat_size);
-    GetValuesVector(displacements);
+    GetDisplacementValuesVector(displacements);
 
     // Compute strain
     noalias(rThisConstitutiveVariables.StrainVector) = prod(rThisKinematicVariables.B, displacements);

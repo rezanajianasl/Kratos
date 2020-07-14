@@ -7,7 +7,7 @@
 //					 license: structural_mechanics_application/license.txt
 //
 //  Main authors:    Reza Najian Asl
-//                   Shahed Rsezaei
+//                   Shahed Rezaei
 //
 
 #if !defined(KRATOS_BASE_DAMAGE_SOLID_ELEMENT_H_INCLUDED )
@@ -78,6 +78,7 @@ protected:
         Matrix  InvJ0;
         Matrix  DN_DX;
         Vector Displacements;
+        Vector Df;
 
         /**
          * The default constructor
@@ -100,6 +101,7 @@ protected:
             J0 = ZeroMatrix(Dimension, Dimension);
             InvJ0 = ZeroMatrix(Dimension, Dimension);
             Displacements = ZeroVector(Dimension * NumberOfNodes);
+            Df = ZeroVector(NumberOfNodes);
         }
     };
 
@@ -260,14 +262,34 @@ public:
     }
 
     /**
-     * @brief Sets on rValues the nodal displacements
-     * @param rValues The values of displacements
+     * @brief Sets on rValues the nodal displacements and damages
+     * @param rValues The values of displacements and damages
      * @param Step The step to be computed
      */
     void GetValuesVector(
         Vector& rValues,
         int Step = 0
         ) const override;
+
+    /**
+     * @brief Sets on rValues the nodal displacements
+     * @param rValues The values of displacements
+     * @param Step The step to be computed
+     */
+    void GetDisplacementValuesVector(
+        Vector& rValues,
+        int Step = 0
+        ) const;    
+
+    /**
+     * @brief Sets on rValues the nodal damages
+     * @param rValues The values of damages
+     * @param Step The step to be computed
+     */
+    void GetDamageValuesVector(
+        Vector& rValues,
+        int Step = 0
+        ) const;             
 
     /**
      * @brief Sets on rValues the nodal velocities
