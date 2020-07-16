@@ -159,7 +159,7 @@ class MechanicalSolver(PythonSolver):
         if self.settings["damage_dofs"].GetBool():
             # Add specific variables for the problem (damage dofs).
             self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.DAMAGE)
-            self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.DAMAGE_REACTION)         s 
+            self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.DAMAGE_REACTION)
         if self.settings["volumetric_strain_dofs"].GetBool():
             # Add specific variables for the problem (rotation dofs).
             self.main_model_part.AddNodalSolutionStepVariable(KratosMultiphysics.VOLUMETRIC_STRAIN)
@@ -187,7 +187,7 @@ class MechanicalSolver(PythonSolver):
         if self.settings["volumetric_strain_dofs"].GetBool():
             KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.VOLUMETRIC_STRAIN, StructuralMechanicsApplication.REACTION_STRAIN,self.main_model_part)
         if self.settings["damage_dofs"].GetBool():
-            KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.DAMAGE, StructuralMechanicsApplication.DAMAGE_REACTION,self.main_model_part)            
+            KratosMultiphysics.VariableUtils().AddDof(StructuralMechanicsApplication.DAMAGE, StructuralMechanicsApplication.DAMAGE_REACTION,self.main_model_part)            
         if self.settings["displacement_control"].GetBool():
             KratosMultiphysics.VariableUtils().AddDof(StructuralMechanicsApplication.LOAD_FACTOR, StructuralMechanicsApplication.PRESCRIBED_DISPLACEMENT,self.main_model_part)
 

@@ -317,14 +317,14 @@ void BaseDamageSolidElement::EquationIdVector(
 
     if(dimension == 2) {
         for (IndexType i = 0; i < number_of_nodes; ++i) {
-            const SizeType index = i * 2;
+            const SizeType index = i * 3;
             rResult[index] = GetGeometry()[i].GetDof(DISPLACEMENT_X,pos).EquationId();
             rResult[index + 1] = GetGeometry()[i].GetDof(DISPLACEMENT_Y,pos+1).EquationId();
             rResult[index + 2] = GetGeometry()[i].GetDof(DAMAGE,pos+2).EquationId();
         }
     } else {
         for (IndexType i = 0; i < number_of_nodes; ++i) {
-            const SizeType index = i * 3;
+            const SizeType index = i * 4;
             rResult[index] = GetGeometry()[i].GetDof(DISPLACEMENT_X,pos).EquationId();
             rResult[index + 1] = GetGeometry()[i].GetDof(DISPLACEMENT_Y,pos+1).EquationId();
             rResult[index + 2] = GetGeometry()[i].GetDof(DISPLACEMENT_Z,pos+2).EquationId();
@@ -1653,7 +1653,7 @@ void BaseDamageSolidElement::CalculateAndAddKm(
 
     Matrix Kt = ZeroMatrix( mat_size, mat_size );
     Matrix Kuu = IntegrationWeight * prod( trans( B ), Matrix(prod(D, B))); //displ res contri.
-    Matrix Kdd = ZeroMatrix( number_of_nodes, number_of_nodes ); //damage res contri.
+    Matrix Kdd = IdentityMatrix( number_of_nodes, number_of_nodes ); //damage res contri.
 
     for ( IndexType i = 0; i < number_of_nodes; ++i )
         for ( IndexType j = 0; j < number_of_nodes; ++j ){
