@@ -109,6 +109,8 @@ void BaseLoadCondition::EquationIdVector(
             rResult[index + 1] = GetGeometry()[i].GetDof(DISPLACEMENT_Y,pos + 1).EquationId();
             if (this->HasRotDof())
                 rResult[index + 2] = GetGeometry()[i].GetDof(ROTATION_Z,pos + 2).EquationId();
+            if (this->HasDamageDof())
+                rResult[index + 2] = GetGeometry()[i].GetDof(DAMAGE,pos + 2).EquationId();                
         }
     } else {
         for (SizeType i = 0; i < number_of_nodes; ++i) {
@@ -116,6 +118,8 @@ void BaseLoadCondition::EquationIdVector(
             rResult[index    ] = GetGeometry()[i].GetDof(DISPLACEMENT_X,pos    ).EquationId();
             rResult[index + 1] = GetGeometry()[i].GetDof(DISPLACEMENT_Y,pos + 1).EquationId();
             rResult[index + 2] = GetGeometry()[i].GetDof(DISPLACEMENT_Z,pos + 2).EquationId();
+            if (this->HasDamageDof())
+                rResult[index + 3] = GetGeometry()[i].GetDof(DAMAGE,pos + 3).EquationId();             
         }
     }
     KRATOS_CATCH("")
@@ -142,12 +146,16 @@ void BaseLoadCondition::GetDofList(
             ElementalDofList.push_back( GetGeometry()[i].pGetDof(DISPLACEMENT_Y));
             if (this->HasRotDof())
                 ElementalDofList.push_back( GetGeometry()[i].pGetDof(ROTATION_Z));
+            if (this->HasDamageDof())
+                ElementalDofList.push_back( GetGeometry()[i].pGetDof(DAMAGE));                
         }
     } else {
         for (SizeType i = 0; i < number_of_nodes; ++i) {
             ElementalDofList.push_back( GetGeometry()[i].pGetDof(DISPLACEMENT_X));
             ElementalDofList.push_back( GetGeometry()[i].pGetDof(DISPLACEMENT_Y));
             ElementalDofList.push_back( GetGeometry()[i].pGetDof(DISPLACEMENT_Z));
+            if (this->HasDamageDof())
+                ElementalDofList.push_back( GetGeometry()[i].pGetDof(DAMAGE));            
         }
     }
     KRATOS_CATCH("")

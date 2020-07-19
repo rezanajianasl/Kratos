@@ -78,7 +78,7 @@ protected:
         Matrix  InvJ0;
         Matrix  DN_DX;
         Vector Displacements;
-        Vector Df;
+        Vector Damages;
 
         /**
          * The default constructor
@@ -101,7 +101,7 @@ protected:
             J0 = ZeroMatrix(Dimension, Dimension);
             InvJ0 = ZeroMatrix(Dimension, Dimension);
             Displacements = ZeroVector(Dimension * NumberOfNodes);
-            Df = ZeroVector(NumberOfNodes);
+            Damages = ZeroVector(NumberOfNodes);
         }
     };
 
@@ -292,26 +292,6 @@ public:
         ) const;             
 
     /**
-     * @brief Sets on rValues the nodal velocities
-     * @param rValues The values of velocities
-     * @param Step The step to be computed
-     */
-    void GetFirstDerivativesVector(
-        Vector& rValues,
-        int Step = 0
-        ) const override;
-
-    /**
-     * @brief Sets on rValues the nodal accelerations
-     * @param rValues The values of accelerations
-     * @param Step The step to be computed
-     */
-    void GetSecondDerivativesVector(
-        Vector& rValues,
-        int Step = 0
-        ) const override;
-
-    /**
      * @brief This function provides a more general interface to the element.
      * @details It is designed so that rLHSvariables and rRHSvariables are passed to the element thus telling what is the desired output
      * @param rLeftHandSideMatrix container with the output Left Hand Side matrix
@@ -341,57 +321,6 @@ public:
       */
     void CalculateRightHandSide(
         VectorType& rRightHandSideVector,
-        ProcessInfo& rCurrentProcessInfo
-        ) override;
-
-    /**
-     * @brief This function is designed to make the element to assemble an rRHS vector identified by a variable rRHSVariable by assembling it to the nodes on the variable rDestinationVariable (double version)
-     * @details The "AddEXplicit" FUNCTIONS THE ONLY FUNCTIONS IN WHICH AN ELEMENT IS ALLOWED TO WRITE ON ITS NODES.
-     * The caller is expected to ensure thread safety hence SET/UNSETLOCK MUST BE PERFORMED IN THE STRATEGY BEFORE CALLING THIS FUNCTION
-     * @param rRHSVector input variable containing the RHS vector to be assembled
-     * @param rRHSVariable variable describing the type of the RHS vector to be assembled
-     * @param rDestinationVariable variable in the database to which the rRHSVector will be assembled
-     * @param rCurrentProcessInfo the current process info instance
-     */
-    void AddExplicitContribution(
-        const VectorType& rRHSVector,
-        const Variable<VectorType>& rRHSVariable,
-        const Variable<double >& rDestinationVariable,
-        const ProcessInfo& rCurrentProcessInfo
-        ) override;
-
-    /**
-     * @brief This function is designed to make the element to assemble an rRHS vector identified by a variable rRHSVariable by assembling it to the nodes on the variable (array_1d<double, 3>) version rDestinationVariable.
-     * @details The "AddEXplicit" FUNCTIONS THE ONLY FUNCTIONS IN WHICH AN ELEMENT IS ALLOWED TO WRITE ON ITS NODES.
-     * The caller is expected to ensure thread safety hence SET/UNSETLOCK MUST BE PERFORMED IN THE STRATEGY BEFORE CALLING THIS FUNCTION
-     * @param rRHSVector input variable containing the RHS vector to be assembled
-     * @param rRHSVariable variable describing the type of the RHS vector to be assembled
-     * @param rDestinationVariable variable in the database to which the rRHSVector will be assembled
-     * @param rCurrentProcessInfo the current process info instance
-     */
-    void AddExplicitContribution(const VectorType& rRHSVector,
-        const Variable<VectorType>& rRHSVariable,
-        const Variable<array_1d<double, 3> >& rDestinationVariable,
-        const ProcessInfo& rCurrentProcessInfo
-        ) override;
-
-    /**
-      * @brief This is called during the assembling process in order to calculate the elemental mass matrix
-      * @param rMassMatrix The elemental mass matrix
-      * @param rCurrentProcessInfo The current process info instance
-      */
-    void CalculateMassMatrix(
-        MatrixType& rMassMatrix,
-        ProcessInfo& rCurrentProcessInfo
-        ) override;
-
-    /**
-      * @brief This is called during the assembling process in order to calculate the elemental damping matrix
-      * @param rDampingMatrix The elemental damping matrix
-      * @param rCurrentProcessInfo The current process info instance
-      */
-    void CalculateDampingMatrix(
-        MatrixType& rDampingMatrix,
         ProcessInfo& rCurrentProcessInfo
         ) override;
 
@@ -753,13 +682,6 @@ protected:
         );
 
     /**
-     * @brief This methods gives us a matrix with the increment of displacement
-     * @param DeltaDisplacement The matrix containing the increment of displacements
-     * @return DeltaDisplacement: The matrix containing the increment of displacements
-     */
-    Matrix& CalculateDeltaDisplacement(Matrix& DeltaDisplacement) const;
-
-    /**
      * @brief This functions calculate the derivatives in the reference frame
      * @param rJ0 The jacobian in the reference configuration
      * @param rInvJ0 The inverse of the jacobian in the reference configuration
@@ -807,14 +729,14 @@ protected:
     /**
      * @brief Calculation of the Material Stiffness Matrix. Km = B^T * D *B
      * @param rLeftHandSideMatrix The local LHS of the element
-     * @param B The deformationmmatrix
-     * @param D The constitutive matrix
+     * @param rThisKinematicVariables The kinematic variables like shape functions
+     * @param rThisConstitutiveVariables The constitutive variables
      * @param IntegrationWeight The integration weight of the corresponding Gauss point
      */
     virtual void CalculateAndAddKm(
         MatrixType& rLeftHandSideMatrix,
-        const Matrix& B,
-        const Matrix& D,
+        const KinematicVariables& rThisKinematicVariables,
+        const ConstitutiveVariables& rThisConstitutiveVariables,
         const double IntegrationWeight
         ) const;
 
@@ -878,13 +800,6 @@ protected:
         const double detJ
         ) const;
 
-    /**
-    * @brief This function computes the shape gradient of mass matrix
-    * @param rMassMatrix The mass matrix
-    * @param Deriv The shape parameter
-    */
-    void CalculateShapeGradientOfMassMatrix(MatrixType& rMassMatrix, ShapeParameter Deriv) const;
-
     ///@}
     ///@name Protected  Access
     ///@{
@@ -913,21 +828,6 @@ private:
     ///@name Private Operations
     ///@{
 
-    /**
-     * @brief This method computes directly the lumped mass vector
-     * @param rMassMatrix The lumped mass vector
-     */
-    void CalculateLumpedMassVector(VectorType& rMassVector) const;
-
-    /**
-     * @brief This method computes directly the lumped mass matrix
-     * @param rMassMatrix The lumped mass matrix
-     * @param rCurrentProcessInfo The current process info instance
-     */
-    void CalculateDampingMatrixWithLumpedMass(
-        MatrixType& rDampingMatrix,
-        const ProcessInfo& rCurrentProcessInfo
-        );
 
     /**
      * @brief This method gets a value directly in the CL

@@ -176,7 +176,7 @@ void DamageSmallDisplacement::CalculateAll(
 
         if ( CalculateStiffnessMatrixFlag ) { // Calculation of the matrix is required
             // Contributions to stiffness matrix calculated on the reference config
-            this->CalculateAndAddKm( rLeftHandSideMatrix, this_kinematic_variables.B, this_constitutive_variables.D, int_to_reference_weight );
+            this->CalculateAndAddKm( rLeftHandSideMatrix, this_kinematic_variables, this_constitutive_variables, int_to_reference_weight );
         }
 
         if ( CalculateResidualVectorFlag ) { // Calculation of the matrix is required
@@ -211,6 +211,7 @@ void DamageSmallDisplacement::CalculateKinematicVariables(
 
     // Compute equivalent F
     GetDisplacementValuesVector(rThisKinematicVariables.Displacements);
+    GetDamageValuesVector(rThisKinematicVariables.Damages);
     Vector strain_vector = prod(rThisKinematicVariables.B, rThisKinematicVariables.Displacements);
     ComputeEquivalentF(rThisKinematicVariables.F, strain_vector);
     rThisKinematicVariables.detF = MathUtils<double>::Det(rThisKinematicVariables.F);

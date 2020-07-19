@@ -204,6 +204,7 @@ void SmallDisplacement::CalculateKinematicVariables(
 
     rThisKinematicVariables.detJ0 = CalculateDerivativesOnReferenceConfiguration(rThisKinematicVariables.J0, rThisKinematicVariables.InvJ0, rThisKinematicVariables.DN_DX, PointNumber, rIntegrationMethod);
 
+
     KRATOS_ERROR_IF(rThisKinematicVariables.detJ0 < 0.0) << "WARNING:: ELEMENT ID: " << this->Id() << " INVERTED. DETJ0: " << rThisKinematicVariables.detJ0 << std::endl;
 
     // Compute B
@@ -280,7 +281,18 @@ void SmallDisplacement::CalculateB(
 {
     KRATOS_TRY;
 
+
+
     StructuralMechanicsElementUtilities::CalculateB(*this, rDN_DX, rB);
+
+/*
+    for(int i=0;i<rB.size1();i++){
+        for(int j=0;j<rB.size2();j++)
+            std::cout<<rB(i,j)<<"    ";
+    std::cout<<std::endl;
+    }    
+
+    std::cout<<std::endl<<std::endl;    */
 
     KRATOS_CATCH( "" )
 }

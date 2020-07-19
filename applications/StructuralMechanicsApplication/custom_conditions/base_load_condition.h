@@ -277,6 +277,15 @@ public:
     }
 
     /**
+     * @brief Check if Damage Dof existant
+     * @return Trues if exists, false otherwise
+     */
+    virtual bool HasDamageDof() const
+    {
+        return (GetGeometry()[0].HasDofFor(DAMAGE));
+    }    
+
+    /**
      * @brief This method computes the DoF block size
      * @return The size of the DoF block
      */
@@ -290,7 +299,15 @@ public:
                 return 6;
             else
                 KRATOS_ERROR << "The conditions only works for 2D and 3D elements";
-        } else {
+        } 
+        else if( HasDamageDof() ) { // if it has damage
+            if(dim == 2)
+                return 3;
+            else if(dim == 3)
+                return 4;
+            else
+                KRATOS_ERROR << "The conditions only works for 2D and 3D elements";
+        }else {
             return dim;
         }
     }
