@@ -165,8 +165,11 @@ void DamageSmallDisplacement::CalculateAll(
         // Compute element kinematics B, F, DN_DX ...
         CalculateKinematicVariables(this_kinematic_variables, point_number, this->GetIntegrationMethod());
 
+        // Compute phase-field vars
+        CalculatePhaseFieldVariables(this_kinematic_variables, this_constitutive_variables, Values, point_number, integration_points, GetStressMeasure(), rCurrentProcessInfo);
+
         // Compute material reponse
-        CalculateConstitutiveVariables(this_kinematic_variables, this_constitutive_variables, Values, point_number, integration_points, GetStressMeasure());
+        CalculateConstitutiveVariables(this_kinematic_variables, this_constitutive_variables, Values, point_number, integration_points, GetStressMeasure());        
 
         // Calculating weights for integration on the reference configuration
         int_to_reference_weight = GetIntegrationWeight(integration_points, point_number, this_kinematic_variables.detJ0);
@@ -211,7 +214,6 @@ void DamageSmallDisplacement::CalculateKinematicVariables(
 
     // Compute equivalent F
     GetDisplacementValuesVector(rThisKinematicVariables.Displacements);
-    GetDamageValuesVector(rThisKinematicVariables.Damages);
     Vector strain_vector = prod(rThisKinematicVariables.B, rThisKinematicVariables.Displacements);
     ComputeEquivalentF(rThisKinematicVariables.F, strain_vector);
     rThisKinematicVariables.detF = MathUtils<double>::Det(rThisKinematicVariables.F);
@@ -267,6 +269,68 @@ void DamageSmallDisplacement::CalculateConstitutiveVariables(
 
     // Actually do the computations in the ConstitutiveLaw
     mConstitutiveLawVector[PointNumber]->CalculateMaterialResponse(rValues, ThisStressMeasure); //here the calculations are actually done
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+void DamageSmallDisplacement::CalculatePhaseFieldVariables(
+    KinematicVariables& rThisKinematicVariables,
+    ConstitutiveVariables& rThisConstitutiveVariables,
+    ConstitutiveLaw::Parameters& rValues,
+    const IndexType PointNumber,
+    const GeometryType::IntegrationPointsArrayType& IntegrationPoints,
+    const ConstitutiveLaw::StressMeasure ThisStressMeasure,
+    const ProcessInfo& rCurrentProcessInfo
+    ) const
+{
+
+    GetDisplacementValuesVector(rThisKinematicVariables.Displacements);
+    GetDamageValuesVector(rThisKinematicVariables.Damages);
+
+    double gpDamage = inner_prod(rThisKinematicVariables.N,rThisKinematicVariables.Damages);
+    mConstitutiveLawVector[PointNumber]->SetValue(DAMAGE,gpDamage,rCurrentProcessInfo);
+
+    Vector StrainVector = rThisConstitutiveVariables.StrainVector;
+    Vector StressVector = rThisConstitutiveVariables.StressVector;
+
+    double StrainEnergy = 0.0;
+
+    Matrix test;
+
+    //mConstitutiveLawVector[PointNumber]->CalculateValue(rValues, DAMAGE_CONSTITUTIVE_MATRIX, test);
+    //std::cout<<" Calculate Values DAMAGE_CONSTITUTIVE_MATRIX = "<<test<<std::endl;
+
+    //DAMAGE_CONSTITUTIVE_MATRIX
+
+    //Compute 
+/*
+    //Compute damaged C
+    double gpDamage = inner_prod(rThisKinematicVariables.N,rThisKinematicVariables.Damages);
+    double fD = (1-gpDamage) * (1-gpDamage);
+
+    double traceStrainTensor = 0.0;
+    if (StrainVector.size()==3)
+        traceStrainTensor = StrainVector[0] + StrainVector[1];
+    else
+        traceStrainTensor = StrainVector[0] + StrainVector[1] + StrainVector[2];
+    int SigntraceStrainTensor = 1;
+    if (traceStrainTensor<0)
+        SigntraceStrainTensor = -1;
+    double k0 = 1;
+    Matrix P = k0 * SigntraceStrainTensor * IdentityMatrix(D.size1(),D.size1());
+
+    Matrix Cdamaged = (fD * rThisConstitutiveVariables.D) + ((1-fD) * P;
+    Cd.push_back(Cdamaged);
+
+    //Compute H
+
+    double UnDamageStrainEnergy = 0;
+    UnDamageStrainEnergy = 
+    if(StrainEnergy>mUnDamagedElasticEnergyVector[PointNumber])
+        mUnDamagedElasticEnergyVector[PointNumber] = StrainEnergy;
+*/
+
 }
 
 /***********************************************************************************/

@@ -114,6 +114,15 @@ protected:
         Vector StressVector;
         Matrix D;
 
+        double CrackStrainEnergy;
+        double ElasticStrainEnergy;
+        Vector CrackStressVector;
+        Vector ElasticStressVector;
+        Matrix DD;
+        Matrix UD;
+        Matrix P;
+        Matrix Ch;
+
         /**
          * The default constructor
          * @param StrainSize The size of the strain vector in Voigt notation
@@ -123,6 +132,15 @@ protected:
             StrainVector = ZeroVector(StrainSize);
             StressVector = ZeroVector(StrainSize);
             D = ZeroMatrix(StrainSize, StrainSize);
+
+            CrackStrainEnergy = 0.0;
+            ElasticStrainEnergy = 0.0;
+            CrackStressVector = ZeroVector(StrainSize);
+            ElasticStressVector = ZeroVector(StrainSize);
+            DD = ZeroMatrix(StrainSize, StrainSize);
+            UD = ZeroMatrix(StrainSize, StrainSize);
+            P = ZeroMatrix(StrainSize, StrainSize);
+            Ch = ZeroMatrix(StrainSize, StrainSize);
         }
     };
 public:

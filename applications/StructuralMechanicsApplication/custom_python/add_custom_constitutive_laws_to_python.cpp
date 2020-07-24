@@ -21,9 +21,11 @@
 #include "custom_constitutive/truss_constitutive_law.h"
 #include "custom_constitutive/beam_constitutive_law.h"
 #include "custom_constitutive/elastic_isotropic_3d.h"
+#include "custom_constitutive/elastic_isotropic_damage_3d.h"
 #include "custom_constitutive/axisym_elastic_isotropic.h"
 #include "custom_constitutive/linear_plane_stress.h"
 #include "custom_constitutive/linear_plane_strain.h"
+#include "custom_constitutive/linear_plane_strain_damage.h"
 #include "custom_constitutive/user_provided_linear_elastic_law.h"
 
 namespace Kratos {
@@ -49,9 +51,17 @@ void  AddCustomConstitutiveLawsToPython(pybind11::module& m)
     (m, "LinearElasticPlaneStrain2DLaw").def(py::init<>() )
     ;
 
+    py::class_< LinearPlaneStrainDamage, typename LinearPlaneStrainDamage::Pointer, ConstitutiveLaw >
+    (m, "LinearElasticPlaneStrainDamage2DLaw").def(py::init<>() )
+    ;    
+
     py::class_< ElasticIsotropic3D, typename ElasticIsotropic3D::Pointer, ConstitutiveLaw >
     (m, "LinearElastic3DLaw").def(py::init<>() )
     ;
+
+    py::class_< ElasticIsotropicDamage3D, typename ElasticIsotropicDamage3D::Pointer, ConstitutiveLaw >
+    (m, "LinearElasticDamage3DLaw").def(py::init<>() )
+    ;    
 
     py::class_< AxisymElasticIsotropic, typename AxisymElasticIsotropic::Pointer, ConstitutiveLaw >
     (m, "LinearElasticAxisym2DLaw").def(py::init<>() )

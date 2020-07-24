@@ -1387,8 +1387,8 @@ void BaseDamageSolidElement::CalculateAndAddKm(
     double lc = 0.1;
     double d2fdD2 = 2.0;
     double Hi = 1.0;
-    Kdd = IntegrationWeight * gc * ((1.0/lc) * outer_prod(rThisKinematicVariables.N,rThisKinematicVariables.N) + lc * prod(rThisKinematicVariables.DN_DX,trans(rThisKinematicVariables.DN_DX)) );
-    Kdd += IntegrationWeight * d2fdD2 * Hi * outer_prod(rThisKinematicVariables.N,rThisKinematicVariables.N);
+    //Kdd = IntegrationWeight * gc * ((1.0/lc) * outer_prod(rThisKinematicVariables.N,rThisKinematicVariables.N) + lc * prod(rThisKinematicVariables.DN_DX,trans(rThisKinematicVariables.DN_DX)) );
+    //Kdd += IntegrationWeight * d2fdD2 * Hi * outer_prod(rThisKinematicVariables.N,rThisKinematicVariables.N);
 
 
     for ( IndexType i = 0; i < Kuu.size1(); ++i )
@@ -1429,7 +1429,16 @@ void BaseDamageSolidElement::CalculateAndAddResidualVector(
 
     // Operation performed: = IntForce * IntegrationWeight
     Vector rHu = forceCont - IntegrationWeight * prod( trans( rThisKinematicVariables.B ), rStressVector ); //displacement res contr.
-    Vector rHd = ZeroVector( number_of_nodes ); //damage res contr.
+    //Vector rHd = ZeroVector( number_of_nodes ); //damage res contr.
+    //damage params
+    double gc = 10.0;
+    double lc = 0.1;
+    double d2fdD2 = 2.0;
+    double Hi = 1.0;    
+    Matrix tempD = IntegrationWeight * gc * ((1.0/lc) * outer_prod(rThisKinematicVariables.N,rThisKinematicVariables.N) + lc * prod(rThisKinematicVariables.DN_DX,trans(rThisKinematicVariables.DN_DX)) );
+    tempD += IntegrationWeight * d2fdD2 * Hi * outer_prod(rThisKinematicVariables.N,rThisKinematicVariables.N);
+    //Vector rHd = prod(tempD, rThisKinematicVariables.Damages);
+    Vector rHd = ZeroVector( number_of_nodes );
     Vector rHt = ZeroVector( mat_size ); // total RHS composed of rHu and rHt
 
     for ( IndexType i = 0; i < rHu.size(); ++i )       
