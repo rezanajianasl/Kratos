@@ -189,12 +189,24 @@ protected:
         ) override;
 
     /**
-     * @brief It calculates the stress vector
+     * @brief It calculates the damaged stress vector
      * @param rStrainVector The strain vector in Voigt notation
-     * @param rStressVector The stress vector in Voigt notation
+     * @param rStressVector The damaged stress vector in Voigt notation
      * @param rValues Parameters of the constitutive law
      */
-    void CalculatePK2Stress(
+    virtual void CalculateDamagedPK2Stress(
+        const Vector& rStrainVector,
+        Vector& rStressVector,
+        ConstitutiveLaw::Parameters& rValues
+        ) override;
+
+    /**
+     * @brief It calculates the elastic stress vector
+     * @param rStrainVector The strain vector in Voigt notation
+     * @param rStressVector The elastic stress vector in Voigt notation
+     * @param rValues Parameters of the constitutive law
+     */
+    virtual void CalculateElasticPK2Stress(
         const Vector& rStrainVector,
         Vector& rStressVector,
         ConstitutiveLaw::Parameters& rValues

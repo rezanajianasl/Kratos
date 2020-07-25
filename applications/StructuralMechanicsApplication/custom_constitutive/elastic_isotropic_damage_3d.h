@@ -301,7 +301,14 @@ public:
      */
     void SetValue(const Variable<double>& rThisVariable,
         const double& rValue,
-        const ProcessInfo& rCurrentProcessInfo) override;        
+        const ProcessInfo& rCurrentProcessInfo) override;     
+
+    /**
+     * @brief It sets double values like damage 
+     * @param rValue The value
+     * @param rCurrentProcessInfo The current process info instance
+     */
+    double GetDamageValue() {return mDamage;};           
 
     /**
      * @brief This function provides the place to perform checks on the completeness of the input.
@@ -361,16 +368,28 @@ protected:
         );        
 
     /**
-     * @brief It calculates the stress vector
+     * @brief It calculates the damaged stress vector
      * @param rStrainVector The strain vector in Voigt notation
-     * @param rStressVector The stress vector in Voigt notation
+     * @param rStressVector The damaged stress vector in Voigt notation
      * @param rValues Parameters of the constitutive law
      */
-    virtual void CalculatePK2Stress(
+    virtual void CalculateDamagedPK2Stress(
         const Vector& rStrainVector,
         Vector& rStressVector,
         ConstitutiveLaw::Parameters& rValues
         );
+
+    /**
+     * @brief It calculates the elastic stress vector
+     * @param rStrainVector The strain vector in Voigt notation
+     * @param rStressVector The elastic stress vector in Voigt notation
+     * @param rValues Parameters of the constitutive law
+     */
+    virtual void CalculateElasticPK2Stress(
+        const Vector& rStrainVector,
+        Vector& rStressVector,
+        ConstitutiveLaw::Parameters& rValues
+        );        
 
     /**
      * @brief It calculates the strain vector

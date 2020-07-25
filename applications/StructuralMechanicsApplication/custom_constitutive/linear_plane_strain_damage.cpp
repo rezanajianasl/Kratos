@@ -136,7 +136,42 @@ void LinearPlaneStrainDamage::CalculateElasticMatrix(Matrix& C, ConstitutiveLaw:
 /***********************************************************************************/
 /***********************************************************************************/
 
-void LinearPlaneStrainDamage::CalculatePK2Stress(
+void LinearPlaneStrainDamage::CalculateDamagedPK2Stress(
+    const Vector& rStrainVector,
+    Vector& rStressVector,
+    ConstitutiveLaw::Parameters& rValues
+    )
+{
+    const Properties& r_material_properties = rValues.GetMaterialProperties();
+    const double E = r_material_properties[YOUNG_MODULUS];
+    const double NU = r_material_properties[POISSON_RATIO];
+    double mDamage = GetDamageValue();
+
+    double fD = (1-mDamage) * (1-mDamage);
+    double traceStrainTensor = 0.0;
+    if (rStrainVector.size()==3)
+        traceStrainTensor = rStrainVector[0] + rStrainVector[1];
+    else
+        traceStrainTensor = rStrainVector[0] + rStrainVector[1] + rStrainVector[2];
+    int SigntraceStrainTensor = 1;
+    if (traceStrainTensor<0)
+        SigntraceStrainTensor = -1;
+    double k0 = E/(3*(1-2*NU));    
+
+    const double c0 = fD * (E / ((1.00 + NU)*(1 - 2 * NU)));
+    const double c1 = fD * ((1.00 - NU)*c0) + (1-fD) * k0 * SigntraceStrainTensor;
+    const double c2 = fD * (c0 * NU);
+    const double c3 = fD * ((0.5 - NU)*c0) + (1-fD) * k0 * SigntraceStrainTensor;
+
+    rStressVector[0] = c1 * rStrainVector[0] + c2 * rStrainVector[1];
+    rStressVector[1] = c2 * rStrainVector[0] + c1 * rStrainVector[1];
+    rStressVector[2] = c3 * rStrainVector[2];
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+void LinearPlaneStrainDamage::CalculateElasticPK2Stress(
     const Vector& rStrainVector,
     Vector& rStressVector,
     ConstitutiveLaw::Parameters& rValues
@@ -146,10 +181,20 @@ void LinearPlaneStrainDamage::CalculatePK2Stress(
     const double E = r_material_properties[YOUNG_MODULUS];
     const double NU = r_material_properties[POISSON_RATIO];
 
-    const double c0 = E / ((1.00 + NU)*(1 - 2 * NU));
-    const double c1 = (1.00 - NU)*c0;
-    const double c2 = c0 * NU;
-    const double c3 = (0.5 - NU)*c0;
+    double traceStrainTensor = 0.0;
+    if (rStrainVector.size()==3)
+        traceStrainTensor = rStrainVector[0] + rStrainVector[1];
+    else
+        traceStrainTensor = rStrainVector[0] + rStrainVector[1] + rStrainVector[2];
+    int SigntraceStrainTensor = 1;
+    if (traceStrainTensor<0)
+        SigntraceStrainTensor = -1;
+    double k0 = E/(3*(1-2*NU));    
+
+    const double c0 = (E / ((1.00 + NU)*(1 - 2 * NU)));
+    const double c1 = ((1.00 - NU)*c0) - k0 * SigntraceStrainTensor;
+    const double c2 = (c0 * NU);
+    const double c3 = ((0.5 - NU)*c0) - k0 * SigntraceStrainTensor;
 
     rStressVector[0] = c1 * rStrainVector[0] + c2 * rStrainVector[1];
     rStressVector[1] = c2 * rStrainVector[0] + c1 * rStrainVector[1];

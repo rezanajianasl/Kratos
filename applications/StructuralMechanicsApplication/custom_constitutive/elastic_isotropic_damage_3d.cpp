@@ -70,12 +70,12 @@ void  ElasticIsotropicDamage3D::CalculateMaterialResponsePK2(ConstitutiveLaw::Pa
 
     if( r_constitutive_law_options.Is( ConstitutiveLaw::COMPUTE_STRESS )) {
         Vector& r_stress_vector = rValues.GetStressVector();
-        CalculatePK2Stress( r_strain_vector, r_stress_vector, rValues);
+        CalculateDamagedPK2Stress( r_strain_vector, r_stress_vector, rValues);
     }
 
     if( r_constitutive_law_options.Is( ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR )) {
         Matrix& r_constitutive_matrix = rValues.GetConstitutiveMatrix();
-        CalculateElasticMatrix( r_constitutive_matrix, rValues);
+        CalculateDamagedConstitutiveMatrix( r_constitutive_matrix, rValues);
     }
 
     KRATOS_CATCH("");
@@ -187,7 +187,7 @@ double& ElasticIsotropicDamage3D::CalculateValue(ConstitutiveLaw::Parameters& rP
 
     if (rThisVariable == STRAIN_ENERGY) {
         this->CalculateCauchyGreenStrain(rParameterValues, r_strain_vector);
-        this->CalculatePK2Stress( r_strain_vector, r_stress_vector, rParameterValues);
+        this->CalculateDamagedPK2Stress( r_strain_vector, r_stress_vector, rParameterValues);
 
         rValue = 0.5 * inner_prod( r_strain_vector, r_stress_vector); // Strain energy = 0.5*E:C:E
     }
@@ -196,8 +196,9 @@ double& ElasticIsotropicDamage3D::CalculateValue(ConstitutiveLaw::Parameters& rP
         rValue = 514364546;
     }
     else if (rThisVariable == ELASTIC_STRAIN_ENERGY){
-        std::cout<<" HI REZA YOU ARE ASKING ME ELASTIC_STRAIN_ENERGY"<<std::endl;
-        rValue = 4647946513;
+        this->CalculateCauchyGreenStrain(rParameterValues, r_strain_vector);
+        this->CalculateElasticPK2Stress( r_strain_vector, r_stress_vector, rParameterValues);
+
     }
 
     return( rValue );
@@ -282,7 +283,6 @@ void ElasticIsotropicDamage3D::SetValue(
     )
 {
     if(rThisVariable == DAMAGE) mDamage = rValue;
-    std::cout<<" HI REZA YOU ARE CALLING ME SetValue for damage set mDamage= "<<mDamage<<std::endl;
 }
 //*************************CONSTITUTIVE LAW GENERAL FEATURES *************************
 /***********************************************************************************/
@@ -382,15 +382,36 @@ void ElasticIsotropicDamage3D::CalculateDamagedConstitutiveMatrix(
     ConstitutiveLaw::Parameters& rValues
     )
 {
+    
     Matrix unDamagedElasticMatrix;
     CalculateElasticMatrix(unDamagedElasticMatrix,rValues);
-    rConstitutiveMatrix = unDamagedElasticMatrix;
+
+    double fD = (1-mDamage) * (1-mDamage); 
+    Vector StrainVector = rValues.GetStrainVector();
+    Matrix StrainTensor = MathUtils<double>::StrainVectorToTensor(StrainVector);
+    double traceStrainTensor = 0.0;
+    if (StrainVector.size()==3)
+        traceStrainTensor = StrainVector[0] + StrainVector[1];
+    else
+        traceStrainTensor = StrainVector[0] + StrainVector[1] + StrainVector[2];
+    int SigntraceStrainTensor = 1;
+    if (traceStrainTensor<0)
+        SigntraceStrainTensor = -1;
+
+    const Properties& r_material_properties = rValues.GetMaterialProperties();
+    const double E = r_material_properties[YOUNG_MODULUS];
+    const double NU = r_material_properties[POISSON_RATIO];
+    double k0 = E/(3*(1-2*NU));
+    Matrix P = k0 * SigntraceStrainTensor * IdentityMatrix(unDamagedElasticMatrix.size1(),unDamagedElasticMatrix.size2());
+    // now correct the constitutive matrix
+    this->CheckClearElasticMatrix(rConstitutiveMatrix);
+    rConstitutiveMatrix = fD * unDamagedElasticMatrix + (1-fD) * P; 
 
 }
 /***********************************************************************************/
 /***********************************************************************************/
 
-void ElasticIsotropicDamage3D::CalculatePK2Stress(
+void ElasticIsotropicDamage3D::CalculateDamagedPK2Stress(
     const Vector& rStrainVector,
     Vector& rStressVector,
     ConstitutiveLaw::Parameters& rValues
@@ -400,10 +421,62 @@ void ElasticIsotropicDamage3D::CalculatePK2Stress(
     const double E = r_material_properties[YOUNG_MODULUS];
     const double NU = r_material_properties[POISSON_RATIO];
 
-    const double c1 = E / ((1.00 + NU) * (1 - 2 * NU));
-    const double c2 = c1 * (1 - NU);
-    const double c3 = c1 * NU;
-    const double c4 = c1 * 0.5 * (1 - 2 * NU);
+
+    double fD = (1-mDamage) * (1-mDamage);
+    double traceStrainTensor = 0.0;
+    if (rStrainVector.size()==3)
+        traceStrainTensor = rStrainVector[0] + rStrainVector[1];
+    else
+        traceStrainTensor = rStrainVector[0] + rStrainVector[1] + rStrainVector[2];
+    int SigntraceStrainTensor = 1;
+    if (traceStrainTensor<0)
+        SigntraceStrainTensor = -1;
+    double k0 = E/(3*(1-2*NU));
+
+
+
+    const double c1 = fD * (E / ((1.00 + NU) * (1 - 2 * NU)));
+    const double c2 = fD * (c1 * (1 - NU)) + (1-fD) * k0 * SigntraceStrainTensor;
+    const double c3 = fD * (c1 * NU);
+    const double c4 = fD * (c1 * 0.5 * (1 - 2 * NU)) + (1-fD) * k0 * SigntraceStrainTensor;
+
+    rStressVector[0] = c2 * rStrainVector[0] + c3 * rStrainVector[1] + c3 * rStrainVector[2];
+    rStressVector[1] = c3 * rStrainVector[0] + c2 * rStrainVector[1] + c3 * rStrainVector[2];
+    rStressVector[2] = c3 * rStrainVector[0] + c3 * rStrainVector[1] + c2 * rStrainVector[2];
+    rStressVector[3] = c4 * rStrainVector[3];
+    rStressVector[4] = c4 * rStrainVector[4];
+    rStressVector[5] = c4 * rStrainVector[5];
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+void ElasticIsotropicDamage3D::CalculateElasticPK2Stress(
+    const Vector& rStrainVector,
+    Vector& rStressVector,
+    ConstitutiveLaw::Parameters& rValues
+    )
+{
+    const Properties& r_material_properties = rValues.GetMaterialProperties();
+    const double E = r_material_properties[YOUNG_MODULUS];
+    const double NU = r_material_properties[POISSON_RATIO];
+
+    double traceStrainTensor = 0.0;
+    if (rStrainVector.size()==3)
+        traceStrainTensor = rStrainVector[0] + rStrainVector[1];
+    else
+        traceStrainTensor = rStrainVector[0] + rStrainVector[1] + rStrainVector[2];
+    int SigntraceStrainTensor = 1;
+    if (traceStrainTensor<0)
+        SigntraceStrainTensor = -1;
+    double k0 = E/(3*(1-2*NU));
+
+
+
+    const double c1 = (E / ((1.00 + NU) * (1 - 2 * NU)));
+    const double c2 = (c1 * (1 - NU)) - k0 * SigntraceStrainTensor;
+    const double c3 = (c1 * NU);
+    const double c4 = (c1 * 0.5 * (1 - 2 * NU)) - k0 * SigntraceStrainTensor;
 
     rStressVector[0] = c2 * rStrainVector[0] + c3 * rStrainVector[1] + c3 * rStrainVector[2];
     rStressVector[1] = c3 * rStrainVector[0] + c2 * rStrainVector[1] + c3 * rStrainVector[2];

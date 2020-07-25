@@ -291,12 +291,12 @@ void DamageSmallDisplacement::CalculatePhaseFieldVariables(
     double gpDamage = inner_prod(rThisKinematicVariables.N,rThisKinematicVariables.Damages);
     mConstitutiveLawVector[PointNumber]->SetValue(DAMAGE,gpDamage,rCurrentProcessInfo);
 
-    Vector StrainVector = rThisConstitutiveVariables.StrainVector;
-    Vector StressVector = rThisConstitutiveVariables.StressVector;
+    //Vector StrainVector = rThisConstitutiveVariables.StrainVector;
+    //Vector StressVector = rThisConstitutiveVariables.StressVector;
 
-    double StrainEnergy = 0.0;
+    //double StrainEnergy = 0.0;
 
-    Matrix test;
+    //Matrix test;
 
     //mConstitutiveLawVector[PointNumber]->CalculateValue(rValues, DAMAGE_CONSTITUTIVE_MATRIX, test);
     //std::cout<<" Calculate Values DAMAGE_CONSTITUTIVE_MATRIX = "<<test<<std::endl;

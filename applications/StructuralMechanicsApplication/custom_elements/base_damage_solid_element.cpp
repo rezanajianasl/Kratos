@@ -1356,30 +1356,8 @@ void BaseDamageSolidElement::CalculateAndAddKm(
     const SizeType number_of_nodes = GetGeometry().PointsNumber();
     const SizeType mat_size = number_of_nodes * (dimension + 1); //damage dimension is included
 
-
-    Matrix D = rThisConstitutiveVariables.D;
-
-    //preparations to correct the constitutive matrix
-    double gpDamage = inner_prod(rThisKinematicVariables.N,rThisKinematicVariables.Damages);
-    double fD = (1-gpDamage) * (1-gpDamage);    
-    Vector StrainVector = rThisConstitutiveVariables.StrainVector;
-    Matrix StrainTensor = MathUtils<double>::StrainVectorToTensor(StrainVector);
-    double traceStrainTensor = 0.0;
-    if (StrainVector.size()==3)
-        traceStrainTensor = StrainVector[0] + StrainVector[1];
-    else
-        traceStrainTensor = StrainVector[0] + StrainVector[1] + StrainVector[2];
-    int SigntraceStrainTensor = 1;
-    if (traceStrainTensor<0)
-        SigntraceStrainTensor = -1;
-    double k0 = 1;
-    Matrix P = k0 * SigntraceStrainTensor * IdentityMatrix(D.size1(),D.size1());
-    // now correct the constitutive matrix
-    Matrix Dc = fD * D + (1-fD) * P; 
-
-
     Matrix Kt = ZeroMatrix( mat_size, mat_size );
-    Matrix Kuu = IntegrationWeight * prod( trans( rThisKinematicVariables.B ), Matrix(prod(Dc, rThisKinematicVariables.B))); //displ res contri.
+    Matrix Kuu = IntegrationWeight * prod( trans( rThisKinematicVariables.B ), Matrix(prod(rThisConstitutiveVariables.D, rThisKinematicVariables.B))); //displ res contri.
     Matrix Kdd = ZeroMatrix( number_of_nodes, number_of_nodes ); //damage res contri.
 
     //damage params
