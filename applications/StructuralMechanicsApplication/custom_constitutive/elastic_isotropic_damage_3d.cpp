@@ -185,20 +185,16 @@ double& ElasticIsotropicDamage3D::CalculateValue(ConstitutiveLaw::Parameters& rP
     Vector& r_strain_vector = rParameterValues.GetStrainVector();
     Vector& r_stress_vector = rParameterValues.GetStressVector();
 
-    if (rThisVariable == STRAIN_ENERGY) {
+    if (rThisVariable == STRAIN_ENERGY || rThisVariable == CRACK_STRAIN_ENERGY) {
         this->CalculateCauchyGreenStrain(rParameterValues, r_strain_vector);
         this->CalculateDamagedPK2Stress( r_strain_vector, r_stress_vector, rParameterValues);
 
         rValue = 0.5 * inner_prod( r_strain_vector, r_stress_vector); // Strain energy = 0.5*E:C:E
     }
-    else if(rThisVariable == CRACK_STRAIN_ENERGY){
-        std::cout<<" HI REZA YOU ARE ASKING ME CRACK_STRAIN_ENERGY"<<std::endl;
-        rValue = 514364546;
-    }
     else if (rThisVariable == ELASTIC_STRAIN_ENERGY){
         this->CalculateCauchyGreenStrain(rParameterValues, r_strain_vector);
         this->CalculateElasticPK2Stress( r_strain_vector, r_stress_vector, rParameterValues);
-
+        rValue = 0.5 * inner_prod( r_strain_vector, r_stress_vector); // Strain energy = 0.5*E:C:E
     }
 
     return( rValue );

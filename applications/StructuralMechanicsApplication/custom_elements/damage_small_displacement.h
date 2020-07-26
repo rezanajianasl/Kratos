@@ -272,7 +272,7 @@ protected:
         const GeometryType::IntegrationPointsArrayType& IntegrationPoints,
         const ConstitutiveLaw::StressMeasure ThisStressMeasure,
         const ProcessInfo& rCurrentProcessInfo
-        ) const;        
+        );        
 
     /**
      * Calculation of the Deformation Matrix B

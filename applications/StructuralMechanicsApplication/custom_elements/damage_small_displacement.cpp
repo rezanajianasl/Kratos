@@ -183,7 +183,7 @@ void DamageSmallDisplacement::CalculateAll(
         }
 
         if ( CalculateResidualVectorFlag ) { // Calculation of the matrix is required
-            this->CalculateAndAddResidualVector(rRightHandSideVector, this_kinematic_variables, rCurrentProcessInfo, body_force, this_constitutive_variables.StressVector, int_to_reference_weight);
+            this->CalculateAndAddResidualVector(rRightHandSideVector, this_kinematic_variables, this_constitutive_variables, rCurrentProcessInfo, body_force, this_constitutive_variables.StressVector, int_to_reference_weight);
         }
     }
 
@@ -282,7 +282,7 @@ void DamageSmallDisplacement::CalculatePhaseFieldVariables(
     const GeometryType::IntegrationPointsArrayType& IntegrationPoints,
     const ConstitutiveLaw::StressMeasure ThisStressMeasure,
     const ProcessInfo& rCurrentProcessInfo
-    ) const
+    )
 {
 
     GetDisplacementValuesVector(rThisKinematicVariables.Displacements);
@@ -291,46 +291,14 @@ void DamageSmallDisplacement::CalculatePhaseFieldVariables(
     double gpDamage = inner_prod(rThisKinematicVariables.N,rThisKinematicVariables.Damages);
     mConstitutiveLawVector[PointNumber]->SetValue(DAMAGE,gpDamage,rCurrentProcessInfo);
 
-    //Vector StrainVector = rThisConstitutiveVariables.StrainVector;
-    //Vector StressVector = rThisConstitutiveVariables.StressVector;
+    SetConstitutiveVariables(rThisKinematicVariables, rThisConstitutiveVariables, rValues, PointNumber, IntegrationPoints);
+    mConstitutiveLawVector[PointNumber]->CalculateValue(rValues,CRACK_STRAIN_ENERGY,rThisConstitutiveVariables.CrackStrainEnergy);
+    mConstitutiveLawVector[PointNumber]->CalculateValue(rValues,ELASTIC_STRAIN_ENERGY,rThisConstitutiveVariables.ElasticStrainEnergy);
+    
+    if (rThisConstitutiveVariables.ElasticStrainEnergy > mMaxHiVector[PointNumber])
+        this->SetMaximumStrainEnergy(rThisConstitutiveVariables.ElasticStrainEnergy,PointNumber);
 
-    //double StrainEnergy = 0.0;
-
-    //Matrix test;
-
-    //mConstitutiveLawVector[PointNumber]->CalculateValue(rValues, DAMAGE_CONSTITUTIVE_MATRIX, test);
-    //std::cout<<" Calculate Values DAMAGE_CONSTITUTIVE_MATRIX = "<<test<<std::endl;
-
-    //DAMAGE_CONSTITUTIVE_MATRIX
-
-    //Compute 
-/*
-    //Compute damaged C
-    double gpDamage = inner_prod(rThisKinematicVariables.N,rThisKinematicVariables.Damages);
-    double fD = (1-gpDamage) * (1-gpDamage);
-
-    double traceStrainTensor = 0.0;
-    if (StrainVector.size()==3)
-        traceStrainTensor = StrainVector[0] + StrainVector[1];
-    else
-        traceStrainTensor = StrainVector[0] + StrainVector[1] + StrainVector[2];
-    int SigntraceStrainTensor = 1;
-    if (traceStrainTensor<0)
-        SigntraceStrainTensor = -1;
-    double k0 = 1;
-    Matrix P = k0 * SigntraceStrainTensor * IdentityMatrix(D.size1(),D.size1());
-
-    Matrix Cdamaged = (fD * rThisConstitutiveVariables.D) + ((1-fD) * P;
-    Cd.push_back(Cdamaged);
-
-    //Compute H
-
-    double UnDamageStrainEnergy = 0;
-    UnDamageStrainEnergy = 
-    if(StrainEnergy>mUnDamagedElasticEnergyVector[PointNumber])
-        mUnDamagedElasticEnergyVector[PointNumber] = StrainEnergy;
-*/
-
+    rThisConstitutiveVariables.MaxElasticStrainEnergy = mMaxHiVector[PointNumber];
 }
 
 /***********************************************************************************/

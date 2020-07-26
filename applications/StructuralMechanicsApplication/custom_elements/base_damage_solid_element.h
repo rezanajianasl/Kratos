@@ -113,15 +113,9 @@ protected:
         Vector StrainVector;
         Vector StressVector;
         Matrix D;
-
         double CrackStrainEnergy;
         double ElasticStrainEnergy;
-        Vector CrackStressVector;
-        Vector ElasticStressVector;
-        Matrix DD;
-        Matrix UD;
-        Matrix P;
-        Matrix Ch;
+        double MaxElasticStrainEnergy;
 
         /**
          * The default constructor
@@ -132,15 +126,9 @@ protected:
             StrainVector = ZeroVector(StrainSize);
             StressVector = ZeroVector(StrainSize);
             D = ZeroMatrix(StrainSize, StrainSize);
-
             CrackStrainEnergy = 0.0;
             ElasticStrainEnergy = 0.0;
-            CrackStressVector = ZeroVector(StrainSize);
-            ElasticStressVector = ZeroVector(StrainSize);
-            DD = ZeroMatrix(StrainSize, StrainSize);
-            UD = ZeroMatrix(StrainSize, StrainSize);
-            P = ZeroMatrix(StrainSize, StrainSize);
-            Ch = ZeroMatrix(StrainSize, StrainSize);
+            MaxElasticStrainEnergy = 0.0;
         }
     };
 public:
@@ -307,7 +295,7 @@ public:
     void GetDamageValuesVector(
         Vector& rValues,
         int Step = 0
-        ) const;             
+        ) const;                  
 
     /**
      * @brief This function provides a more general interface to the element.
@@ -592,6 +580,12 @@ protected:
     ///@name Protected member Variables
     ///@{
 
+    double gc = 10.0;
+    double lc = 0.1;
+    double d2fdD2 = 2.0;    
+
+    std::vector<double> mMaxHiVector;   
+
     IntegrationMethod mThisIntegrationMethod; /// Currently selected integration methods
 
     std::vector<ConstitutiveLaw::Pointer> mConstitutiveLawVector; /// The vector containing the constitutive laws
@@ -620,6 +614,16 @@ protected:
     void SetConstitutiveLawVector(const std::vector<ConstitutiveLaw::Pointer>& ThisConstitutiveLawVector)
     {
         mConstitutiveLawVector = ThisConstitutiveLawVector;
+    }
+
+    /**
+     * @brief Sets the maximum elastic strain energy
+     * @param MaximumStrainEnergy Maximum Strain Energy
+     * @param PointNumber The integration point considered
+     */
+    void SetMaximumStrainEnergy(double MaximumStrainEnergy, const IndexType PointNumber)
+    {
+       mMaxHiVector[PointNumber] = MaximumStrainEnergy;
     }
 
     /**
@@ -776,6 +780,7 @@ protected:
      * @brief Calculation of the RHS
      * @param rRightHandSideVector The local component of the RHS due to external forces
      * @param rThisKinematicVariables The kinematic variables like shape functions
+     * @param rThisConstitutiveVariables The constitutive variables
      * @param rCurrentProcessInfo rCurrentProcessInfo the current process info instance
      * @param rBodyForce The component of external forces due to self weight
      * @param rStressVector The vector containing the stress components
@@ -784,6 +789,7 @@ protected:
     virtual void CalculateAndAddResidualVector(
         VectorType& rRightHandSideVector,
         const KinematicVariables& rThisKinematicVariables,
+        const ConstitutiveVariables& rThisConstitutiveVariables,
         const ProcessInfo& rCurrentProcessInfo,
         const array_1d<double, 3>& rBodyForce,
         const Vector& rStressVector,
