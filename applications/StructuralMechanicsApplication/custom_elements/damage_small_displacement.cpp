@@ -264,6 +264,7 @@ void DamageSmallDisplacement::CalculateConstitutiveVariables(
     const ConstitutiveLaw::StressMeasure ThisStressMeasure
     )
 {
+
     // Set the constitutive variables
     SetConstitutiveVariables(rThisKinematicVariables, rThisConstitutiveVariables, rValues, PointNumber, IntegrationPoints);
 
@@ -292,7 +293,11 @@ void DamageSmallDisplacement::CalculatePhaseFieldVariables(
     mConstitutiveLawVector[PointNumber]->SetValue(DAMAGE,gpDamage,rCurrentProcessInfo);
 
     SetConstitutiveVariables(rThisKinematicVariables, rThisConstitutiveVariables, rValues, PointNumber, IntegrationPoints);
+    
+    // calculate strain (including crack strain energy)
     mConstitutiveLawVector[PointNumber]->CalculateValue(rValues,CRACK_STRAIN_ENERGY,rThisConstitutiveVariables.CrackStrainEnergy);
+
+    // calculate elastic strain (excluding crack strain energy)
     mConstitutiveLawVector[PointNumber]->CalculateValue(rValues,ELASTIC_STRAIN_ENERGY,rThisConstitutiveVariables.ElasticStrainEnergy);
     
     if (rThisConstitutiveVariables.ElasticStrainEnergy > mMaxHiVector[PointNumber])

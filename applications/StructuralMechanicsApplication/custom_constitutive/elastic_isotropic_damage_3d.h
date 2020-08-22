@@ -365,7 +365,17 @@ protected:
     virtual void CalculateDamagedConstitutiveMatrix(
         Matrix& rDamagedConstitutiveMatrix,
         ConstitutiveLaw::Parameters& rValues
-        );        
+        ); 
+
+    /**
+    * @brief It calculates the P matrix rConstitutiveMatrix
+    * @param rConstitutiveMatrix The constitutive matrix
+    * @param rValues Parameters of the constitutive law
+    */
+    virtual void CalculatePMatrix(
+        Matrix& rPMatrix,
+        ConstitutiveLaw::Parameters& rValues
+        );                
 
     /**
      * @brief It calculates the damaged stress vector
@@ -377,19 +387,19 @@ protected:
         const Vector& rStrainVector,
         Vector& rStressVector,
         ConstitutiveLaw::Parameters& rValues
-        );
+        );   
 
     /**
-     * @brief It calculates the elastic stress vector
+     * @brief It calculates the damaged stress vector
      * @param rStrainVector The strain vector in Voigt notation
-     * @param rStressVector The elastic stress vector in Voigt notation
+     * @param rStressVector The damaged stress vector in Voigt notation
      * @param rValues Parameters of the constitutive law
      */
-    virtual void CalculateElasticPK2Stress(
+    virtual void CalculateUnDamagedPK2Stress(
         const Vector& rStrainVector,
         Vector& rStressVector,
         ConstitutiveLaw::Parameters& rValues
-        );        
+        );         
 
     /**
      * @brief It calculates the strain vector

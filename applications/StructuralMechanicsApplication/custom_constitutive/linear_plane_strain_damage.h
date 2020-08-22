@@ -147,18 +147,7 @@ public:
     ///@}
     ///@name Friends
     ///@{
-
-    /**
-     * @brief  Itreturns the value of a specified variable
-     * @param rThisVariable the variable to be returned
-     * @param rValue a reference to the returned value
-     * @param rValue output: the value of the specified variable
-     */
-    bool& GetValue(const Variable<bool>& rThisVariable, bool& rValue) override;
-    Matrix& GetValue(const Variable<Matrix>& rThisVariable, Matrix& rValue) override;
-    Vector& GetValue(const Variable<Vector>& rThisVariable, Vector& rValue) override;
-    double& GetValue(const Variable<double>& rThisVariable, double& rValue) override;
-
+        
     ///@}
 
 protected:
@@ -186,31 +175,7 @@ protected:
     void CalculateElasticMatrix(
         Matrix& C, 
         ConstitutiveLaw::Parameters& rValues
-        ) override;
-
-    /**
-     * @brief It calculates the damaged stress vector
-     * @param rStrainVector The strain vector in Voigt notation
-     * @param rStressVector The damaged stress vector in Voigt notation
-     * @param rValues Parameters of the constitutive law
-     */
-    virtual void CalculateDamagedPK2Stress(
-        const Vector& rStrainVector,
-        Vector& rStressVector,
-        ConstitutiveLaw::Parameters& rValues
-        ) override;
-
-    /**
-     * @brief It calculates the elastic stress vector
-     * @param rStrainVector The strain vector in Voigt notation
-     * @param rStressVector The elastic stress vector in Voigt notation
-     * @param rValues Parameters of the constitutive law
-     */
-    virtual void CalculateElasticPK2Stress(
-        const Vector& rStrainVector,
-        Vector& rStressVector,
-        ConstitutiveLaw::Parameters& rValues
-        ) override;
+        ) override;   
 
     /**
      * @brief It calculates the strain vector
